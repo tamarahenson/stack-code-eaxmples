@@ -1,0 +1,100 @@
+version: '3.9'
+ 
+x-persist-driver-ext: &persist-driver 
+  driver: local-persist
+ 
+x-env-file: &services-env-file
+  env_file:
+    - ../stack.env
+ 
+x-commmon-env-ext: &commmon-env 
+  TZ: ${TZ}
+  PUID: ${PUID}
+  PGID: ${PGID}
+ 
+volumes:
+  FileFlows_config:
+      <<: *persist-driver
+      driver_opts:
+        mountpoint: ${DOCKER_DIR}/FileFlows/config
+      name: FileFlows_config
+  FileFlows_logs:
+      <<: *persist-driver
+      driver_opts:
+        mountpoint: ${DOCKER_DIR}/FileFlows/logs
+      name: FileFlows_logs
+  FileFlows_temp:
+      <<: *persist-driver
+      driver_opts:
+        mountpoint: ${DOCKER_DIR}/Fileflows/temp
+      name: FileFlows_temp
+  nzbget_config:
+      <<: *persist-driver
+      driver_opts:
+        mountpoint: ${DOCKER_DIR}/nzbget
+      name: nzbget_config
+  qbitorrent_config:
+      <<: *persist-driver
+      driver_opts:
+        mountpoint: ${DOCKER_DIR}/qbitorrent
+      name:  qbitorrent_config
+ 
+services:
+  FileFlows:
+    container_name: FileFlows
+    restart: unless-stopped
+    networks: 
+      saitohsmedia:
+        ipv4_address: 172.20.0.13
+    ports:
+        - 5000:5000
+    volumes:
+        - FileFlows_config:/app/Data
+        - FileFlows_logs:/app/Logs
+        - FileFlows_temp:/temp
+        - ${MAIN_DATA}
+        - ${DOCKER_SOCKET}
+    environment:
+      <<: *commmon-env
+      TempPathHost: /data/docker_volumes/downloads/temp/fileflows/tempCont
+    image: revenz/fileflows
+ 
+  nzbget:
+    container_name: nzbget
+    restart: unless-stopped
+    networks: 
+      saitohsmedia:
+        ipv4_address: 172.20.0.5
+    volumes:
+        - nzbget_config:/config
+        - ${MAIN_DATA}
+    environment:
+      <<: *commmon-env
+    labels:
+      com.centurylinklabs.watchtower.enable: 'true'
+    image: linuxserver/nzbget
+  
+  qbittorrent:
+    container_name: qbittorrent
+    restart: unless-stopped
+    networks: 
+      saitohsmedia:
+        ipv4_address: 172.20.0.5
+    ports:
+        - 8008:8080
+        - 42410:42410
+        - 42410:42410/udp
+    volumes:
+        - nzbget_config:/config
+        - ${MAIN_DATA}
+    environment:
+      <<: *commmon-env
+      WEBUI_PORT: 8080
+    labels:
+      com.centurylinklabs.watchtower.enable: 'true'
+    image: ghcr.io/linuxserver/qbittorrent
+ 
+networks:
+  saitohsmedia:
+    name: saitohsmedia
+    external: true
