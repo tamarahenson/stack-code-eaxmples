@@ -1,0 +1,31 @@
+version: '3.9'
+
+services:
+
+  wordpress:
+    image: wordpress
+    ports:
+      - 8080:80
+    environment:
+      WORDPRESS_DB_HOST: ${WP_DB_HOST}
+      WORDPRESS_DB_NAME: ${WP_DB_NAME}
+      WORDPRESS_DB_USER: ${WP_DB_USER}
+      WORDPRESS_DB_PASSWORD: ${WP_DB_PW} 
+    volumes:
+      - wordpress-data:/var/www/html
+
+  mysql:
+    # we sue mariadb here for arm support
+    # mariadb is a fork of MySQL that's often faster and better multi-platform
+    image: mysql:5.6
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PW}
+      MYSQL_DATABASE: ${MYSQL_DB}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PW}
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+volumes:
+  mysql-data:
+  wordpress-data:
