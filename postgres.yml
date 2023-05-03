@@ -1,0 +1,36 @@
+version: '3.9'
+
+services:
+  oms-db:
+    image: postgres:13-alpine
+    volumes:
+      - oms-db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: oms
+      POSTGRES_USER_FILE: /run/secrets/oms-db-user
+      POSTGRES_PASSWORD_FILE: /run/secrets/oms-db-password
+    secrets:
+      - oms-db-user
+      - oms-db-password
+    networks:
+      - bo-overlay
+    ports:
+      - "5434:5432"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "15m"
+        max-file: "5"
+
+networks:
+  bo-overlay:
+    external: true
+
+secrets:
+  oms-db-user:
+    external: true
+  oms-db-password:
+    external: true
+
+volumes:
+  oms-db-data:
