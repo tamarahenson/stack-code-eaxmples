@@ -1,0 +1,77 @@
+services:
+
+  plex:
+    image: linuxserver/plex:latest
+    container_name: linuxserver-plex1
+    cap_add:
+      - NET_ADMIN
+    networks:
+      composemacvlan:
+        ipv4_address: 192.168.4.121
+    volumes:
+      - /volume1/docker/Plex:/config:rw
+      - /volume1/torrent/torrent:/Media:rw
+    environment:
+      - VERSION=latest
+      - PGID=100
+      - PUID=1036
+      - TZ=Europe/Budapest
+    restart: unless-stopped  
+
+  xteve:
+    image: dnsforge/xteve:latest
+    container_name: xteve_macvlan
+    cap_add:
+      - NET_ADMIN
+    networks:
+      composemacvlan:
+        ipv4_address: 192.168.4.122
+    volumes:
+      - /volume1/docker/xteve:/home/xteve/conf
+    environment:
+      - PGID=100
+      - PUID=1036
+      - TZ=Europe/Budapest
+    restart: unless-stopped
+
+  tvmosaic:
+    image: dvblogic/tvmosaic:latest
+    container_name: tvmosaic_macvlan
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    networks:
+      composemacvlan:
+        ipv4_address: 192.168.4.123
+    environment:
+      - PUID=1036
+      - PGID=100
+      - TZ=Europe/Budapest
+    volumes:
+      - /volume1/docker/tvmosaic/config:/opt/TVMosaic
+      - /volume1/torrent/torrent/TVREC:/recordings
+      - /volume1/docker/tvmosaic/sundtek:/sundtek
+      - /etc/localtime:/etc/localtime:ro
+
+
+
+  adguard:
+    image: adguard/adguardhome
+    container_name: adguardhome
+    cap_add:
+      - NET_ADMIN
+    networks:
+      composemacvlan:
+        ipv4_address: 192.168.4.124
+    environment:
+      - PGID=100
+      - PUID=1037
+      - TZ=Europe/Budapest
+    privileged: true
+    volumes:
+      - /volume1/docker/adguard/conf:/opt/adguardhome/conf:rw
+      - /volume1/docker/adguard/work:/opt/adguardhome/work:rw
+
+networks:
+  composemacvlan:
+    name: tvheadend_net
